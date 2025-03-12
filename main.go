@@ -94,7 +94,7 @@ func GetAESEncrypted(plaintext string, passString string) (string, error) {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.1")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.2")
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
@@ -120,6 +120,23 @@ func main() {
 		dialog.ShowForm("Type the password", "OK", "Cancel", passitem, func(confirm bool) {
 			if confirm {
 				PassString = passEntry.Text
+				/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
+				if len(PassString) > 32 {
+					subtract := len(PassString) - 32
+					PassString = PassString[:len(PassString)-subtract]
+				} else if len(PassString) < 32 {
+					substract := 32 - len(PassString)
+					addtable := make([]int, substract)
+					add := ""
+					for _, num := range addtable {
+						add += strconv.Itoa(num)
+					}
+
+					PassString = PassString + add
+					fmt.Println("It was more than 32 so it is it now: " + PassString)
+				}
+				/*---------------------------------------------------------------------*/
+
 				if len(PassString) == 32 {
 					if pathoffile != "" {
 						f, err := os.OpenFile(pathoffile, os.O_WRONLY|os.O_CREATE, 0666)
@@ -158,6 +175,25 @@ func main() {
 				dialog.ShowForm("Type the password", "OK", "Cancel", passitem, func(confirm bool) {
 					if confirm {
 						PassString = passEntry.Text
+						/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
+
+						if len(PassString) > 32 {
+							subtract := len(PassString) - 32
+							PassString = PassString[:len(PassString)-subtract]
+						} else if len(PassString) < 32 {
+							substract := 32 - len(PassString)
+							addtable := make([]int, substract)
+							add := ""
+							for _, num := range addtable {
+								add += strconv.Itoa(num)
+							}
+
+							/*---------------------------------------------------------------------*/
+
+							PassString = PassString + add
+							fmt.Println("It was more than 32 so it is it now: " + PassString)
+						}
+
 						if len(PassString) == 32 {
 							data, _ := ioutil.ReadAll(r)
 							result := fyne.NewStaticResource("name", data)
@@ -182,7 +218,7 @@ func main() {
 		openfileDialog.Show()
 	})
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.1 by Maciej Piątek | 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.2 by Maciej Piątek | 2025 |", w)
 	})
 	//-----------------------------------//
 
