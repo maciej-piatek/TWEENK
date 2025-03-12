@@ -9,4 +9,4 @@ It uses a custom .tweenk extension and uses AES-256 encryption.
 3. Formatting syntax
 4. More encryption methods
 
-### Current version as of 08.03.2025 is 0.0.1
+### Current version as of 12.03.2025 is 0.0.2
