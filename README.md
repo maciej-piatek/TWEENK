@@ -1,7 +1,7 @@
 # TWEENK : Encrypted Note App 
 Tweenk is an encrypted note taking app written in Golang. It uses Fyne as its GUI environment. Its a lightweight application made to run on everything that Go and Fyne can run on.
 I'm planning to update it frequently and add new useful stuff to it so it will become a powerhouse of a note app in the future.
-It uses a custom .tweenk extension and uses AES-256 encryption.
+It uses a custom .tweenk extension and AES-256 encryption.
 
 ## Planned features:
 1. Dark mode
