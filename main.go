@@ -18,21 +18,15 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-var counter int = 1
-var pathoffile string
 var PassString string
 
-// This function decrypts AES 256 CBC
+// GetAESDecrypted decrypts in AES 256 CBC
 func GetAESDecrypted(encrypted string, passString string) ([]byte, error) {
 	ivString := passString[:len(passString)-16]
 	enckey := passString
 	iv := ivString
 
 	ciphertext, err := base64.StdEncoding.DecodeString(encrypted)
-
-	if err != nil {
-		return nil, err
-	}
 
 	block, err := aes.NewCipher([]byte(enckey))
 
@@ -41,7 +35,7 @@ func GetAESDecrypted(encrypted string, passString string) ([]byte, error) {
 	}
 
 	if len(ciphertext)%aes.BlockSize != 0 {
-		return nil, fmt.Errorf("block size cant be zero")
+		return nil, fmt.Errorf("error 01: block size cant be zero") // block size cannot be zero
 	}
 
 	mode := cipher.NewCBCDecrypter(block, []byte(iv))
@@ -51,7 +45,7 @@ func GetAESDecrypted(encrypted string, passString string) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// PKCS5UnPadding  pads a certain blob of data with necessary data to be used in AES block cipher
+// PKCS5UnPadding pads a certain blob of data with necessary data to be used in AES block cipher
 func PKCS5UnPadding(src []byte) []byte {
 	length := len(src)
 	unpadding := int(src[length-1])
@@ -94,14 +88,16 @@ func GetAESEncrypted(plaintext string, passString string) (string, error) {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.2")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.3")
+	pathoffile := "" // it was a global variable before but it was useless since this works too
+	counter := 1     // it also was a global variable before
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
 	entry1.Resize(fyne.NewSize(500, 500))
 
-	//Encryption//
-	passEntry := widget.NewEntry() //this is the value that stores the passord you type
+	//Encryption key//
+	passEntry := widget.NewEntry() //this is the value that stores the key provided by user
 
 	passitem := []*widget.FormItem{
 		widget.NewFormItem("Password", passEntry),
@@ -141,7 +137,7 @@ func main() {
 					if pathoffile != "" {
 						f, err := os.OpenFile(pathoffile, os.O_WRONLY|os.O_CREATE, 0666)
 						if err != nil {
-
+							fmt.Println(nil, err)
 						}
 						defer f.Close()
 						f.WriteString(entry1.Text)
@@ -150,8 +146,8 @@ func main() {
 							func(r fyne.URIWriteCloser, _ error) {
 								textData := []byte(entry1.Text)
 								encryptedData, err := GetAESEncrypted(string(textData), PassString)
-								if 1 == 0 {
-									fmt.Println(err)
+								if err != nil {
+									fmt.Println(nil, err)
 								}
 								r.Write([]byte(encryptedData))
 								pathoffile = r.URI().Path()
@@ -198,8 +194,8 @@ func main() {
 							data, _ := ioutil.ReadAll(r)
 							result := fyne.NewStaticResource("name", data)
 							decryptedFile, err := GetAESDecrypted(string(result.StaticContent), PassString)
-							if 1 == 0 {
-								fmt.Println(err)
+							if err != nil {
+								fmt.Println(nil, err)
 							}
 							entry1.SetText(string(decryptedFile))
 							pathoffile = r.URI().Path()
@@ -218,7 +214,7 @@ func main() {
 		openfileDialog.Show()
 	})
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.2 by Maciej Piątek | 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.3 by Maciej Piątek | 2025 |", w)
 	})
 	//-----------------------------------//
 
