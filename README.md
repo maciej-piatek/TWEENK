@@ -17,4 +17,4 @@ It uses a custom .tweenk extension and AES-256 encryption.
 ![UI_FileOpen](https://github.com/user-attachments/assets/398ba929-9a30-44b3-a14a-e7831a28df51)
 
 
-### Current version as of 12.03.2025 is 0.0.2
+### Current version as of 15.03.2025 is 0.0.3
