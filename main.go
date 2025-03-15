@@ -232,7 +232,3 @@ func main() {
 	w.Resize(fyne.NewSize(500, 500))
 	w.ShowAndRun()
 }
-
-func GetPassword() string {
-	return PassString
-}
