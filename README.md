@@ -16,5 +16,17 @@ It uses a custom .tweenk extension and AES-256 encryption.
 ![UI_PasswordPrompt](https://github.com/user-attachments/assets/cf5d4f8f-0a18-4305-8404-00ea2ce431a0)
 ![UI_FileOpen](https://github.com/user-attachments/assets/398ba929-9a30-44b3-a14a-e7831a28df51)
 
+## **About contributing**
+
+1. Feel free to fork the repository if you want to add something new yourself
+2. Create a feature branch: `git checkout -b feature-new`
+3. Commit changes: `git commit -m "Added feature"`
+4. Push to your branch: `git push origin feature-new`
+5. Submit a pull request.
+
+## **Stay Connected**
+Star the repository if you find it useful or think its cool!  
+For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me on [reddit](https://www.reddit.com/user/Shoddy_Trick7610/).
+
 
 ### Current version as of 15.03.2025 is 0.0.3
