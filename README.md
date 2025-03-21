@@ -4,13 +4,15 @@ I'm planning to update it frequently and add new useful stuff to it so it will b
 It uses a custom .tweenk extension and AES-256 encryption.
 
 ## Planned features:
-1. Dark mode
+~~1. Dark mode~~ [completed in 0.0.4 version]
+
 2. Web and android support
 3. Formatting syntax
 4. More encryption methods
 
 ## Screenshots
-![UI_Main](https://github.com/user-attachments/assets/4574ee60-46eb-4e45-9dfe-bfef159afde2)
+![Main_Menu_light](https://github.com/user-attachments/assets/a76e39cb-7bb1-472b-8a27-39ef5903bf47)
+![Main_Menu_dark](https://github.com/user-attachments/assets/3b911934-cc27-4008-a318-b8b8cb560731)
 ![UI_Menu_Example](https://github.com/user-attachments/assets/9e080e49-e720-4378-924a-db8cc6742f11)
 ![UI_Info](https://github.com/user-attachments/assets/645d5607-64da-4570-8933-f5d92ba3febb)
 ![UI_PasswordPrompt](https://github.com/user-attachments/assets/cf5d4f8f-0a18-4305-8404-00ea2ce431a0)
