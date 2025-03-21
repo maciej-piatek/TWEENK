@@ -15,18 +15,23 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
-var PassString string
+var PassKeyString string
 
 // GetAESDecrypted decrypts in AES 256 CBC
-func GetAESDecrypted(encrypted string, passString string) ([]byte, error) {
-	ivString := passString[:len(passString)-16]
-	enckey := passString
+func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
+	ivString := PassKeyString[:len(PassKeyString)-16]
+	enckey := PassKeyString
 	iv := ivString
 
 	ciphertext, err := base64.StdEncoding.DecodeString(encrypted)
+
+	if err != nil {
+		return nil, err
+	}
 
 	block, err := aes.NewCipher([]byte(enckey))
 
@@ -54,9 +59,9 @@ func PKCS5UnPadding(src []byte) []byte {
 }
 
 // GetAESEncrypted encrypts text in AES 256 CBC
-func GetAESEncrypted(plaintext string, passString string) (string, error) {
-	ivString := passString[:len(passString)-16]
-	enckey := passString
+func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
+	ivString := PassKeyString[:len(PassKeyString)-16]
+	enckey := PassKeyString
 	iv := ivString
 
 	var plainTextBlock []byte
@@ -88,19 +93,20 @@ func GetAESEncrypted(plaintext string, passString string) (string, error) {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.3")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.4")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	counter := 1     // it also was a global variable before
+	isDarkModeOn := false
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
 	entry1.Resize(fyne.NewSize(500, 500))
 
 	//Encryption key//
-	passEntry := widget.NewEntry() //this is the value that stores the key provided by user
+	passKeyEntry := widget.NewEntry() //this is the value that stores the key provided by user
 
-	passitem := []*widget.FormItem{
-		widget.NewFormItem("Password", passEntry),
+	passKeyItem := []*widget.FormItem{
+		widget.NewFormItem("Encryption Key", passKeyEntry),
 	}
 
 	//-----------------------------------//
@@ -113,27 +119,27 @@ func main() {
 		entry1.Refresh()
 	})
 	savefile1 := fyne.NewMenuItem("Save", func() {
-		dialog.ShowForm("Type the password", "OK", "Cancel", passitem, func(confirm bool) {
+		dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", passKeyItem, func(confirm bool) {
 			if confirm {
-				PassString = passEntry.Text
+				PassKeyString = passKeyEntry.Text
 				/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
-				if len(PassString) > 32 {
-					subtract := len(PassString) - 32
-					PassString = PassString[:len(PassString)-subtract]
-				} else if len(PassString) < 32 {
-					substract := 32 - len(PassString)
+				if len(PassKeyString) > 32 {
+					subtract := len(PassKeyString) - 32
+					PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
+				} else if len(PassKeyString) < 32 {
+					substract := 32 - len(PassKeyString)
 					addtable := make([]int, substract)
 					add := ""
 					for _, num := range addtable {
 						add += strconv.Itoa(num)
 					}
 
-					PassString = PassString + add
-					fmt.Println("It was more than 32 so it is it now: " + PassString)
+					PassKeyString = PassKeyString + add
+					fmt.Println("It was more than 32 so it is it now: " + PassKeyString)
 				}
 				/*---------------------------------------------------------------------*/
 
-				if len(PassString) == 32 {
+				if len(PassKeyString) == 32 {
 					if pathoffile != "" {
 						f, err := os.OpenFile(pathoffile, os.O_WRONLY|os.O_CREATE, 0666)
 						if err != nil {
@@ -145,7 +151,7 @@ func main() {
 						saveFileDialog := dialog.NewFileSave(
 							func(r fyne.URIWriteCloser, _ error) {
 								textData := []byte(entry1.Text)
-								encryptedData, err := GetAESEncrypted(string(textData), PassString)
+								encryptedData, err := GetAESEncrypted(string(textData), PassKeyString)
 								if err != nil {
 									fmt.Println(nil, err)
 								}
@@ -168,16 +174,16 @@ func main() {
 	openfile1 := fyne.NewMenuItem("Open", func() {
 		openfileDialog := dialog.NewFileOpen(
 			func(r fyne.URIReadCloser, _ error) {
-				dialog.ShowForm("Type the password", "OK", "Cancel", passitem, func(confirm bool) {
+				dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", passKeyItem, func(confirm bool) {
 					if confirm {
-						PassString = passEntry.Text
+						PassKeyString = passKeyEntry.Text
 						/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
 
-						if len(PassString) > 32 {
-							subtract := len(PassString) - 32
-							PassString = PassString[:len(PassString)-subtract]
-						} else if len(PassString) < 32 {
-							substract := 32 - len(PassString)
+						if len(PassKeyString) > 32 {
+							subtract := len(PassKeyString) - 32
+							PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
+						} else if len(PassKeyString) < 32 {
+							substract := 32 - len(PassKeyString)
 							addtable := make([]int, substract)
 							add := ""
 							for _, num := range addtable {
@@ -186,14 +192,14 @@ func main() {
 
 							/*---------------------------------------------------------------------*/
 
-							PassString = PassString + add
-							fmt.Println("It was more than 32 so it is it now: " + PassString)
+							PassKeyString = PassKeyString + add
+							fmt.Println("It was more than 32 so it is it now: " + PassKeyString)
 						}
 
-						if len(PassString) == 32 {
+						if len(PassKeyString) == 32 {
 							data, _ := ioutil.ReadAll(r)
 							result := fyne.NewStaticResource("name", data)
-							decryptedFile, err := GetAESDecrypted(string(result.StaticContent), PassString)
+							decryptedFile, err := GetAESDecrypted(string(result.StaticContent), PassKeyString)
 							if err != nil {
 								fmt.Println(nil, err)
 							}
@@ -201,7 +207,7 @@ func main() {
 							pathoffile = r.URI().Path()
 							w.SetTitle(pathoffile)
 						} else {
-							fmt.Println(len(PassString))
+							fmt.Println(len(PassKeyString))
 						}
 					} else {
 						fmt.Println("skibidi fortnite")
@@ -214,14 +220,24 @@ func main() {
 		openfileDialog.Show()
 	})
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.3 by Maciej Piątek | 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.4 by Maciej Piątek | 2025 |", w)
+	})
+	view1 := fyne.NewMenuItem("Change theme", func() {
+		if !isDarkModeOn {
+			a.Settings().SetTheme(theme.DarkTheme())
+			isDarkModeOn = true
+		} else {
+			a.Settings().SetTheme(theme.LightTheme())
+			isDarkModeOn = false
+		} //I know theme.DarkTheme will be soon removed from fyne, but I have no idea how to set it up within the program itself. I want to add user an option to use light or dark mode if they please.
 	})
 	//-----------------------------------//
 
 	//Menu items//
 	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1)
 	menuitem2 := fyne.NewMenu("Info", info1)
-	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2)
+	menuitem3 := fyne.NewMenu("View", view1)
+	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3)
 	w.SetMainMenu(mainmenu1)
 	w.SetContent(
 		container.NewWithoutLayout(
