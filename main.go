@@ -93,10 +93,11 @@ func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.4")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.5")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	counter := 1     // it also was a global variable before
 	isDarkModeOn := false
+	isTextHidden := false
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
@@ -104,6 +105,7 @@ func main() {
 
 	//Encryption key//
 	passKeyEntry := widget.NewEntry() //this is the value that stores the key provided by user
+	passKeyEntry.Password = true
 
 	passKeyItem := []*widget.FormItem{
 		widget.NewFormItem("Encryption Key", passKeyEntry),
@@ -135,7 +137,7 @@ func main() {
 					}
 
 					PassKeyString = PassKeyString + add
-					fmt.Println("It was more than 32 so it is it now: " + PassKeyString)
+
 				}
 				/*---------------------------------------------------------------------*/
 
@@ -193,11 +195,11 @@ func main() {
 							/*---------------------------------------------------------------------*/
 
 							PassKeyString = PassKeyString + add
-							fmt.Println("It was more than 32 so it is it now: " + PassKeyString)
+
 						}
 
 						if len(PassKeyString) == 32 {
-							data, _ := ioutil.ReadAll(r)
+							data, _ := ioutil.ReadAll(r) //apparently I should not use this but it works so whatever
 							result := fyne.NewStaticResource("name", data)
 							decryptedFile, err := GetAESDecrypted(string(result.StaticContent), PassKeyString)
 							if err != nil {
@@ -220,7 +222,7 @@ func main() {
 		openfileDialog.Show()
 	})
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.4 by Maciej Piątek | 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.5 by Maciej Piątek | 2025 |", w)
 	})
 	view1 := fyne.NewMenuItem("Change theme", func() {
 		if !isDarkModeOn {
@@ -229,22 +231,31 @@ func main() {
 		} else {
 			a.Settings().SetTheme(theme.LightTheme())
 			isDarkModeOn = false
-		} //I know theme.DarkTheme will be soon removed from fyne, but I have no idea how to set it up within the program itself. I want to add user an option to use light or dark mode if they please.
+		} //I know theme.DarkTheme and LightTheme will be soon removed from fyne, but I do not care.
+	})
+	view2 := fyne.NewMenuItem("Hide text", func() {
+		if !isTextHidden {
+			entry1.Password = true
+			isTextHidden = true
+		} else {
+			entry1.Password = false
+			isTextHidden = false
+		}
 	})
 	//-----------------------------------//
 
 	//Menu items//
 	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1)
 	menuitem2 := fyne.NewMenu("Info", info1)
-	menuitem3 := fyne.NewMenu("View", view1)
+	menuitem3 := fyne.NewMenu("View", view1, view2)
 	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3)
 	w.SetMainMenu(mainmenu1)
-	w.SetContent(
-		container.NewWithoutLayout(
-			entry1,
-		),
-	)
+	NWLtest := container.NewWithoutLayout(entry1)
+	w.SetContent(NWLtest)
 	//-----------------------------------//
 	w.Resize(fyne.NewSize(500, 500))
+
+	NWLtest.Resize(w.Canvas().Size())
 	w.ShowAndRun()
+
 }
