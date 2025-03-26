@@ -3,6 +3,14 @@ Tweenk is an encrypted note taking app written in Golang. It uses Fyne as its GU
 I'm planning to update it frequently and add new useful stuff to it so it will become a powerhouse of a note app in the future.
 It uses a custom .tweenk extension and AES-256 encryption.
 
+## Current features:
+Dark/Light mode switch
+Text hiding privacy view switch
+Strong AES-256 encryption
+Portability (no need for installation, use it anywhere)
+Ease of use
+
+
 ## Planned features:
 ~~1. Dark mode~~ [completed in 0.0.4 version]
 
@@ -31,4 +39,4 @@ Star the repository if you find it useful or think its cool!
 For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me on [reddit](https://www.reddit.com/user/Shoddy_Trick7610/).
 
 
-### Current version as of 15.03.2025 is 0.0.3
+### Current version as of 26.03.2025 is 0.0.5
