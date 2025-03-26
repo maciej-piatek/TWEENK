@@ -4,11 +4,11 @@ I'm planning to update it frequently and add new useful stuff to it so it will b
 It uses a custom .tweenk extension and AES-256 encryption.
 
 ## Current features:
-Dark/Light mode switch
-Text hiding privacy view switch
-Strong AES-256 encryption
-Portability (no need for installation, use it anywhere)
-Ease of use
+* Dark/Light mode switch
+* Text hiding privacy view switch
+* Strong AES-256 encryption
+* Portability (no need for installation, use it anywhere)
+* Ease of use
 
 
 ## Planned features:
