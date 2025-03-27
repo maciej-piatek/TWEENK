@@ -93,9 +93,8 @@ func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.5")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.6")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
-	counter := 1     // it also was a global variable before
 	isDarkModeOn := false
 	isTextHidden := false
 	entry1 := widget.NewMultiLineEntry()
@@ -161,14 +160,14 @@ func main() {
 								pathoffile = r.URI().Path()
 								w.SetTitle(pathoffile)
 							}, w)
-						saveFileDialog.SetFileName("New encrypted file" + strconv.Itoa(counter-1) + ".tweenk")
+						saveFileDialog.SetFileName("New encrypted file" + ".tweenk")
 						saveFileDialog.Show()
 					}
 				} else {
-					fmt.Println("nwm")
+					fmt.Println("error")
 				}
 			} else {
-				fmt.Println("skibidi toilet")
+				fmt.Println("error")
 			}
 		}, w)
 
@@ -212,7 +211,7 @@ func main() {
 							fmt.Println(len(PassKeyString))
 						}
 					} else {
-						fmt.Println("skibidi fortnite")
+						fmt.Println("error")
 					}
 				}, w)
 
@@ -222,7 +221,7 @@ func main() {
 		openfileDialog.Show()
 	})
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.5 by Maciej Piątek | 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.6 by Maciej Piątek | 2025 |", w)
 	})
 	view1 := fyne.NewMenuItem("Change theme", func() {
 		if !isDarkModeOn {
@@ -231,7 +230,7 @@ func main() {
 		} else {
 			a.Settings().SetTheme(theme.LightTheme())
 			isDarkModeOn = false
-		} //I know theme.DarkTheme and LightTheme will be soon removed from fyne, but I do not care.
+		}
 	})
 	view2 := fyne.NewMenuItem("Hide text", func() {
 		if !isTextHidden {
@@ -257,5 +256,3 @@ func main() {
 
 	NWLtest.Resize(w.Canvas().Size())
 	w.ShowAndRun()
-
-}
