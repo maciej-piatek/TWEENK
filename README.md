@@ -39,4 +39,4 @@ Star the repository if you find it useful or think its cool!
 For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me on [reddit](https://www.reddit.com/user/Shoddy_Trick7610/).
 
 
-### Current version as of 26.03.2025 is 0.0.5
+### Current version as of 27.03.2025 is 0.0.6
