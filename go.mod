@@ -2,7 +2,9 @@ module tweenk
 
 go 1.22.0
 
-require fyne.io/fyne/v2 v2.5.3
+require fyne.io/fyne/v2 v2.5.5
+
+require github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 
 require (
 	fyne.io/systray v1.11.0 // indirect
