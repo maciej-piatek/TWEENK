@@ -6,7 +6,7 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 
@@ -174,9 +174,9 @@ func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 					PassKeyString = PassKeyString + add
 				}
 
-				data, err := ioutil.ReadAll(r)
+				data, err := io.ReadAll(r)
 				if err != nil {
-					fmt.Println("error", err)
+					fmt.Println("error")
 					return
 				}
 
@@ -199,7 +199,7 @@ func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.7")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.8")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isDarkModeOn := false
 	isTextHidden := false
@@ -221,27 +221,36 @@ func main() {
 		passKeyEntry.Refresh()
 		SaveFile(w, entry1, passKeyEntry, &pathoffile)
 	})
+	ctrlO := &desktop.CustomShortcut{KeyName: fyne.KeyO, Modifier: desktop.ControlModifier}
+	w.Canvas().AddShortcut(ctrlO, func(shortcut fyne.Shortcut) {
+		passKeyEntry.Text = ""
+		passKeyEntry.Refresh()
+		OpenFile(w, entry1, passKeyEntry, &pathoffile)
+	})
 	//-----------------------------------//
 
-	//Menu subitems//
+	/*Menu subitems*/
+	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.0.7")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.0.8")
 		entry1.Text = ""
 		entry1.Refresh()
 	})
+	//Save file
 	savefile1 := fyne.NewMenuItem("Save", func() {
 		passKeyEntry.Text = ""
 		passKeyEntry.Refresh()
 		SaveFile(w, entry1, passKeyEntry, &pathoffile)
 	})
+	//Open file
 	openfile1 := fyne.NewMenuItem("Open", func() {
 		passKeyEntry.Text = ""
 		passKeyEntry.Refresh()
 		OpenFile(w, entry1, passKeyEntry, &pathoffile)
 	})
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.7 by Maciej Piątek | 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.8 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	view1 := fyne.NewMenuItem("Change theme", func() {
 		if !isDarkModeOn {
@@ -281,4 +290,8 @@ func main() {
 	w.ShowAndRun()
 	//-----------------------------------//
 
+	/*What changed in 0.0.8?*/
+	//Threw out iooutil and chaged it to just io because it works the same and its newer
+	//Added ctrl+o shortcut that opens an open file dialog
+	//Added email for contact
 }
