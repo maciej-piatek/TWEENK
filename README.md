@@ -36,7 +36,7 @@ It uses a custom .tweenk extension and AES-256 encryption.
 
 ## **Stay Connected**
 Star the repository if you find it useful or think its cool!  
-For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me on [reddit](https://www.reddit.com/user/Shoddy_Trick7610/).
+For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me via email mpdev@memeware.net.
 
 
 ### Current version as of 28.03.2025 is 0.0.7
