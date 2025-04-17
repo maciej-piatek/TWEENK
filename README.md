@@ -40,3 +40,5 @@ For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues)
 
 
 ### Current version as of 28.03.2025 is 0.0.7
+
+Also available on sourceforge - https://sourceforge.net/projects/tweenk-encrypted-note-app/
