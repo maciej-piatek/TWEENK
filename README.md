@@ -41,8 +41,9 @@ For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues)
 
 ### Current version as of 28.03.2025 is 0.0.7
 
-#How to install from source:
+# How to install from source:
 go install fyne.io/fyne/v2/cmd/fyne@latest
+
 fyne get github.com/maciej-piatek/TWEENK
 
 Also available on sourceforge - https://sourceforge.net/projects/tweenk-encrypted-note-app/
