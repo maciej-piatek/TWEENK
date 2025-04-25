@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -93,56 +95,73 @@ func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
 }
 
 func SaveFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pathoffile *string) {
-	dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", []*widget.FormItem{
-		widget.NewFormItem("Encryption Key", passKeyEntry),
-	}, func(confirm bool) {
-		if !confirm {
-			fmt.Println("error while saving")
-			return
-		}
-		/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
-		PassKeyString := passKeyEntry.Text
-		if len(PassKeyString) > 32 {
-			subtract := len(PassKeyString) - 32
-			PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
-		} else if len(PassKeyString) < 32 {
-			substract := 32 - len(PassKeyString)
-			addtable := make([]int, substract)
-			add := ""
-			for _, num := range addtable {
-				add += strconv.Itoa(num)
-			}
-			PassKeyString = PassKeyString + add
-		}
+	if strings.Contains(*pathoffile, ".txt") {
+		saveFileDialog := dialog.NewFileSave(
+			func(r fyne.URIWriteCloser, _ error) {
+				if r == nil {
+					return
+				}
+				textData := []byte(entry.Text)
+				r.Write([]byte(textData))
+				*pathoffile = r.URI().Path()
+				w.SetTitle(*pathoffile)
+			}, w)
+		saveFileDialog.SetFileName(filepath.Base(*pathoffile))
+		saveFileDialog.Show()
 
-		if *pathoffile != "" {
-			f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE, 0666)
-			if err != nil {
-				fmt.Println("error opening file:", err)
+	} else {
+		dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", []*widget.FormItem{
+			widget.NewFormItem("Encryption Key", passKeyEntry),
+		}, func(confirm bool) {
+			if !confirm {
+				fmt.Println("error while saving")
 				return
 			}
-			defer f.Close()
-			f.WriteString(entry.Text)
-		} else {
-			saveFileDialog := dialog.NewFileSave(
-				func(r fyne.URIWriteCloser, _ error) {
-					if r == nil {
-						return
-					}
-					textData := []byte(entry.Text)
-					encryptedData, err := GetAESEncrypted(string(textData), PassKeyString)
-					if err != nil {
-						fmt.Println("error", err)
-						return
-					}
-					r.Write([]byte(encryptedData))
-					*pathoffile = r.URI().Path()
-					w.SetTitle(*pathoffile)
-				}, w)
-			saveFileDialog.SetFileName("New encrypted file" + ".tweenk")
-			saveFileDialog.Show()
-		}
-	}, w)
+			/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
+			PassKeyString := passKeyEntry.Text
+			if len(PassKeyString) > 32 {
+				subtract := len(PassKeyString) - 32
+				PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
+			} else if len(PassKeyString) < 32 {
+				substract := 32 - len(PassKeyString)
+				addtable := make([]int, substract)
+				add := ""
+				for _, num := range addtable {
+					add += strconv.Itoa(num)
+				}
+				PassKeyString = PassKeyString + add
+			}
+
+			if *pathoffile != "" {
+				f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE, 0666)
+				if err != nil {
+					fmt.Println("error opening file:", err)
+					return
+				}
+				defer f.Close()
+				f.WriteString(entry.Text)
+			} else {
+				saveFileDialog := dialog.NewFileSave(
+					func(r fyne.URIWriteCloser, _ error) {
+						if r == nil {
+							return
+						}
+						textData := []byte(entry.Text)
+						encryptedData, err := GetAESEncrypted(string(textData), PassKeyString)
+						if err != nil {
+							fmt.Println("error", err)
+							return
+						}
+						r.Write([]byte(encryptedData))
+						*pathoffile = r.URI().Path()
+						w.SetTitle(*pathoffile)
+					}, w)
+				saveFileDialog.SetFileName("New encrypted file" + ".tweenk")
+				saveFileDialog.Show()
+			}
+		}, w)
+	}
+
 }
 
 func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pathoffile *string) {
@@ -196,17 +215,41 @@ func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 	openfileDialog.Show()
 }
 
+func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
+	openfileDialog := dialog.NewFileOpen(
+		func(r fyne.URIReadCloser, _ error) {
+			if r == nil {
+				fmt.Println("error")
+				return
+			}
+
+			data, err := io.ReadAll(r)
+			if err != nil {
+				fmt.Println("error", err)
+				return
+			}
+
+			entry.SetText(string(data))
+			*pathoffile = r.URI().Path()
+			w.SetTitle(*pathoffile)
+		}, w)
+
+	openfileDialog.SetFilter(
+		storage.NewExtensionFileFilter([]string{".txt"}))
+	openfileDialog.Show()
+}
+
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.8")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.9")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isDarkModeOn := false
 	isTextHidden := false
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
-	entry1.Resize(fyne.NewSize(500, 500))
+	entry1.Resize(fyne.NewSize(1280, 720))
 	//-----------------------------------//
 
 	//Encryption key//
@@ -233,7 +276,7 @@ func main() {
 	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.0.8")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.0.9")
 		entry1.Text = ""
 		entry1.Refresh()
 	})
@@ -244,14 +287,22 @@ func main() {
 		SaveFile(w, entry1, passKeyEntry, &pathoffile)
 	})
 	//Open file
-	openfile1 := fyne.NewMenuItem("Open", func() {
+	openfile1 := fyne.NewMenuItem("Open encrypted text", func() {
 		passKeyEntry.Text = ""
 		passKeyEntry.Refresh()
 		OpenFile(w, entry1, passKeyEntry, &pathoffile)
 	})
-	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.8 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+	openfile2 := fyne.NewMenuItem("Open plain text", func() {
+		passKeyEntry.Text = ""
+		passKeyEntry.Refresh()
+		OpenPlainFile(w, entry1, &pathoffile)
 	})
+
+	//Information
+	info1 := fyne.NewMenuItem("About Tweenk", func() {
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.9 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+	})
+	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
 		if !isDarkModeOn {
 			a.Settings().SetTheme(theme.DarkTheme())
@@ -273,7 +324,7 @@ func main() {
 	//-----------------------------------//
 
 	//Menu items//
-	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1)
+	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1, openfile2)
 	menuitem2 := fyne.NewMenu("Info", info1)
 	menuitem3 := fyne.NewMenu("View", view1, view2)
 	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3)
@@ -284,14 +335,13 @@ func main() {
 	//Size and run//
 	NWLtest := container.NewWithoutLayout(entry1)
 	w.SetContent(NWLtest)
-	w.Resize(fyne.NewSize(500, 500))
+	w.Resize(fyne.NewSize(1285, 750))
 
 	NWLtest.Resize(w.Canvas().Size())
 	w.ShowAndRun()
 	//-----------------------------------//
 
-	/*What changed in 0.0.8?*/
-	//Threw out iooutil and chaged it to just io because it works the same and its newer
-	//Added ctrl+o shortcut that opens an open file dialog
-	//Added email for contact
+	/*What changed in 0.0.9?*/
+	//Changed default screen resolution of TWEENK
+	//Added ability of opening and saving plain text .txt files
 }
