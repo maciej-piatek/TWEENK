@@ -242,7 +242,7 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.0.9")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.0")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isDarkModeOn := false
 	isTextHidden := false
@@ -250,6 +250,10 @@ func main() {
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
 	entry1.Resize(fyne.NewSize(1280, 720))
+	//-----------------------------------//
+
+	//Checks for richtext
+
 	//-----------------------------------//
 
 	//Encryption key//
@@ -270,13 +274,14 @@ func main() {
 		passKeyEntry.Refresh()
 		OpenFile(w, entry1, passKeyEntry, &pathoffile)
 	})
+
 	//-----------------------------------//
 
 	/*Menu subitems*/
 	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.0.9")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.0")
 		entry1.Text = ""
 		entry1.Refresh()
 	})
@@ -300,7 +305,7 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.0.9 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.0 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
@@ -321,13 +326,14 @@ func main() {
 			isTextHidden = false
 		}
 	})
+
 	//-----------------------------------//
 
 	//Menu items//
 	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1, openfile2)
 	menuitem2 := fyne.NewMenu("Info", info1)
 	menuitem3 := fyne.NewMenu("View", view1, view2)
-	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3)
+	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem3, menuitem2)
 	w.SetMainMenu(mainmenu1)
 
 	//-----------------------------------//
@@ -341,7 +347,8 @@ func main() {
 	w.ShowAndRun()
 	//-----------------------------------//
 
-	/*What changed in 0.0.9?*/
-	//Changed default screen resolution of TWEENK
-	//Added ability of opening and saving plain text .txt files
+	/*What changed in 0.1.0?*/
+	//Rearanged menu items
+	//Updated to latest fyne version (fyne 2.6.1)
+
 }
