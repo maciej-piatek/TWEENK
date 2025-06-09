@@ -9,6 +9,7 @@ It uses a custom .tweenk extension and AES-256 encryption.
 * Strong AES-256 encryption
 * Portability (no need for installation, use it anywhere)
 * Ease of use
+* Safety (Constantly updating Go and Fyne to the newest versions to avoid bugs and exploits)
 
 
 ## Planned features:
