@@ -242,17 +242,31 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.0")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.1")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
-	isDarkModeOn := false
 	isTextHidden := false
+	kswpdz := false //klucz szyfrowania w pamieci do zapisu (its in polish cuz why not)
+
+	themeData, err := os.ReadFile("config.ini") //reads the ini file and saves your theme settings
+	if err != nil {
+		fmt.Println("Error reading file", err)
+	}
+	var isDarkModeOn bool
+	if string(themeData) == "dark" {
+		isDarkModeOn = true
+		a.Settings().SetTheme(theme.DarkTheme())
+	} else if string(themeData) == "light" {
+		isDarkModeOn = false
+		a.Settings().SetTheme(theme.LightTheme())
+	}
+
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
 	entry1.Resize(fyne.NewSize(1280, 720))
 	//-----------------------------------//
 
-	//Checks for richtext
+	//Change text size
 
 	//-----------------------------------//
 
@@ -264,8 +278,10 @@ func main() {
 	//Shortcuts//
 	ctrlS := &desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: desktop.ControlModifier}
 	w.Canvas().AddShortcut(ctrlS, func(shortcut fyne.Shortcut) {
-		passKeyEntry.Text = ""
-		passKeyEntry.Refresh()
+		if !kswpdz {
+			passKeyEntry.Text = ""
+			passKeyEntry.Refresh()
+		}
 		SaveFile(w, entry1, passKeyEntry, &pathoffile)
 	})
 	ctrlO := &desktop.CustomShortcut{KeyName: fyne.KeyO, Modifier: desktop.ControlModifier}
@@ -281,14 +297,17 @@ func main() {
 	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.0")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.1")
 		entry1.Text = ""
 		entry1.Refresh()
+		kswpdz = false
 	})
 	//Save file
 	savefile1 := fyne.NewMenuItem("Save", func() {
-		passKeyEntry.Text = ""
-		passKeyEntry.Refresh()
+		if !kswpdz {
+			passKeyEntry.Text = ""
+			passKeyEntry.Refresh()
+		}
 		SaveFile(w, entry1, passKeyEntry, &pathoffile)
 	})
 	//Open file
@@ -305,16 +324,18 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.0 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.1 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
 		if !isDarkModeOn {
 			a.Settings().SetTheme(theme.DarkTheme())
 			isDarkModeOn = true
+			os.WriteFile("config.ini", []byte("dark"), 0644)
 		} else {
 			a.Settings().SetTheme(theme.LightTheme())
 			isDarkModeOn = false
+			os.WriteFile("config.ini", []byte("light"), 0644)
 		}
 	})
 	view2 := fyne.NewMenuItem("Hide text", func() {
@@ -326,14 +347,25 @@ func main() {
 			isTextHidden = false
 		}
 	})
+	//Settings
+	sett1 := fyne.NewMenuItem("Save encryption key for future saving in this session", func() {
+		if !kswpdz {
+			kswpdz = true
+		} else {
+			kswpdz = false
+		}
+
+	})
 
 	//-----------------------------------//
 
 	//Menu items//
 	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1, openfile2)
-	menuitem2 := fyne.NewMenu("Info", info1)
-	menuitem3 := fyne.NewMenu("View", view1, view2)
-	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem3, menuitem2)
+	menuitem2 := fyne.NewMenu("View", view1, view2)
+	menuitem3 := fyne.NewMenu("Settings", sett1)
+	menuitem4 := fyne.NewMenu("Info", info1)
+
+	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3, menuitem4)
 	w.SetMainMenu(mainmenu1)
 
 	//-----------------------------------//
@@ -347,8 +379,8 @@ func main() {
 	w.ShowAndRun()
 	//-----------------------------------//
 
-	/*What changed in 0.1.0?*/
-	//Rearanged menu items
-	//Updated to latest fyne version (fyne 2.6.1)
-
+	/*What changed in 0.1.1?*/
+	// Added a function to save password in a entry field so if you save multiple times you don't need to type the encryption key every time, you can access it through new settings menu
+	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
+	//TWEENK now saves your theme settings in config.ini file
 }
