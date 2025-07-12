@@ -16,8 +16,8 @@ It uses a custom .tweenk extension and AES-256 encryption.
 ~~1. Dark mode~~ [completed in 0.0.4 version]
 
 2. Web and android support
-3. Formatting syntax
-4. More encryption methods
+3. More encryption methods
+4. More customization options
 
 ## Screenshots
 ![Main_Menu_light](https://github.com/user-attachments/assets/a76e39cb-7bb1-472b-8a27-39ef5903bf47)
