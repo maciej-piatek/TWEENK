@@ -101,6 +101,8 @@ func SaveFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 				if r == nil {
 					return
 				}
+				defer r.Close()
+
 				textData := []byte(entry.Text)
 				r.Write([]byte(textData))
 				*pathoffile = r.URI().Path()
@@ -133,19 +135,28 @@ func SaveFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 			}
 
 			if *pathoffile != "" {
-				f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE, 0666)
+				f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 				if err != nil {
 					fmt.Println("error opening file:", err)
 					return
 				}
 				defer f.Close()
-				f.WriteString(entry.Text)
+
+				textData := []byte(entry.Text)
+				encryptedData, err := GetAESEncrypted(string(textData), PassKeyString)
+				if err != nil {
+					fmt.Println("error", err)
+					return
+				}
+				f.Write([]byte(encryptedData))
 			} else {
 				saveFileDialog := dialog.NewFileSave(
 					func(r fyne.URIWriteCloser, _ error) {
 						if r == nil {
 							return
 						}
+						defer r.Close()
+
 						textData := []byte(entry.Text)
 						encryptedData, err := GetAESEncrypted(string(textData), PassKeyString)
 						if err != nil {
@@ -175,7 +186,7 @@ func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 				widget.NewFormItem("Encryption Key", passKeyEntry),
 			}, func(confirm bool) {
 				if !confirm {
-					fmt.Println("error while saving")
+					fmt.Println("error while opening")
 					return
 				}
 				/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
@@ -242,28 +253,37 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.1")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.2")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isTextHidden := false
 	kswpdz := false //klucz szyfrowania w pamieci do zapisu (its in polish cuz why not)
+	windowWidth := 1285
+	windowHeight := 750
+	entryWidth := 1280
+	entryHeight := 720
 
 	themeData, err := os.ReadFile("config.ini") //reads the ini file and saves your theme settings
+	//resData, err := os.ReadFile("resolution.ini") //reads the ini file and saves your resolution settings
+	// in 0.1.3 There will be Added an option to customize width and heighth of a text box and window in resolution.ini (soon I will implement it to config.ini but right now I cannot figure it out)
+
 	if err != nil {
 		fmt.Println("Error reading file", err)
 	}
 	var isDarkModeOn bool
-	if string(themeData) == "dark" {
+	if strings.Contains(string(themeData), "dark") {
 		isDarkModeOn = true
 		a.Settings().SetTheme(theme.DarkTheme())
-	} else if string(themeData) == "light" {
+	} else if strings.Contains(string(themeData), "light") {
 		isDarkModeOn = false
 		a.Settings().SetTheme(theme.LightTheme())
+	} else {
+		os.WriteFile("config.ini", []byte(""), 0644)
 	}
 
 	entry1 := widget.NewMultiLineEntry()
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
-	entry1.Resize(fyne.NewSize(1280, 720))
+	entry1.Resize(fyne.NewSize(float32(entryWidth), float32(entryHeight)))
 	//-----------------------------------//
 
 	//Change text size
@@ -297,7 +317,7 @@ func main() {
 	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.1")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.2")
 		entry1.Text = ""
 		entry1.Refresh()
 		kswpdz = false
@@ -324,7 +344,7 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.1 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.2 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
@@ -373,14 +393,16 @@ func main() {
 	//Size and run//
 	NWLtest := container.NewWithoutLayout(entry1)
 	w.SetContent(NWLtest)
-	w.Resize(fyne.NewSize(1285, 750))
+	w.Resize(fyne.NewSize(float32(windowWidth), float32(windowHeight)))
 
 	NWLtest.Resize(w.Canvas().Size())
 	w.ShowAndRun()
 	//-----------------------------------//
 
-	/*What changed in 0.1.1?*/
-	// Added a function to save password in a entry field so if you save multiple times you don't need to type the encryption key every time, you can access it through new settings menu
+	/*What changed in 0.1.2?*/
+
+	// Redesigned config.ini and how TWEENK reads it
+	// FIXED SAVING FILES
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
-	//TWEENK now saves your theme settings in config.ini file
+
 }
