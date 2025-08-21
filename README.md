@@ -18,6 +18,8 @@ It uses a custom .tweenk extension and AES-256 CBC encryption.
 2. Web and android support
 3. More encryption methods
 4. More customization options
+5. TODO List
+6. Access to recently saved files from a list
 
 ## Screencast
 ![Main_Menu_light](https://github.com/maciej-piatek/TWEENK/blob/main/showcase.gif)
