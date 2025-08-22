@@ -15,7 +15,7 @@ It uses a custom .tweenk extension and AES-256 CBC encryption.
 ## Planned features:
 ~~1. Dark mode~~ [completed in 0.0.4 version]
 
-2. Web and android support
+2. Web and ~~android~~ support [Android version is being worked on here: https://github.com/maciej-piatek/TWEENK-Android]
 3. More encryption methods
 4. More customization options
 5. TODO List
