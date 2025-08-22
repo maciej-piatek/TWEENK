@@ -37,7 +37,7 @@ Star the repository if you find it useful or think its cool!
 For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me via email mpdev@memeware.net.
 
 
-### Current version as of 12.07.2025 is 0.1.2
+### Current version as of 22.08.2025 is 0.1.3
 
 # How to install from source:
 go install fyne.io/fyne/v2/cmd/fyne@latest
