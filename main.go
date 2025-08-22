@@ -253,18 +253,14 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.2")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.3")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isTextHidden := false
 	kswpdz := false //klucz szyfrowania w pamieci do zapisu (its in polish cuz why not)
 	windowWidth := 1285
 	windowHeight := 750
-	entryWidth := 1280
-	entryHeight := 720
 
 	themeData, err := os.ReadFile("config.ini") //reads the ini file and saves your theme settings
-	//resData, err := os.ReadFile("resolution.ini") //reads the ini file and saves your resolution settings
-	// in 0.1.3 There will be Added an option to customize width and heighth of a text box and window in resolution.ini (soon I will implement it to config.ini but right now I cannot figure it out)
 
 	if err != nil {
 		fmt.Println("Error reading file", err)
@@ -281,9 +277,10 @@ func main() {
 	}
 
 	entry1 := widget.NewMultiLineEntry()
+	entry1.Wrapping = fyne.TextWrapWord
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
-	entry1.Resize(fyne.NewSize(float32(entryWidth), float32(entryHeight)))
+
 	//-----------------------------------//
 
 	//Change text size
@@ -317,7 +314,7 @@ func main() {
 	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.2")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.3")
 		entry1.Text = ""
 		entry1.Refresh()
 		kswpdz = false
@@ -344,7 +341,7 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.2 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.3 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
@@ -391,18 +388,17 @@ func main() {
 	//-----------------------------------//
 
 	//Size and run//
-	NWLtest := container.NewWithoutLayout(entry1)
-	w.SetContent(NWLtest)
+	scroll1 := container.NewScroll(entry1)
+	w.SetContent(scroll1)
 	w.Resize(fyne.NewSize(float32(windowWidth), float32(windowHeight)))
 
-	NWLtest.Resize(w.Canvas().Size())
 	w.ShowAndRun()
 	//-----------------------------------//
 
-	/*What changed in 0.1.2?*/
+	/*What changed in 0.1.3?*/
 
-	// Redesigned config.ini and how TWEENK reads it
-	// FIXED SAVING FILES
+	// Entry field now fits the entire screen and can be resized
+	// Text does not go outside the entry field so its more readable now
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
