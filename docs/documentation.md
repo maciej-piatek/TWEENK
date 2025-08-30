@@ -11,7 +11,7 @@ Open terminal in VSCode and type:
 2. fyne get github.com/maciej-piatek/TWEENK
 3. fyne package -os windows -icon icon.png 
 
-Now an .exe files was prepared and its ready to use on any windows machine.
+Now an .exe file was prepared and its ready to use on any windows machine.
 
 ## Features
 Tweenk consists of a text box where you can input and edit your notes. It acts like any text box in a notepad type program. Above it you can see a menu with four submenus: File, View, Settings and Info.
