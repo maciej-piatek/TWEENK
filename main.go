@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -119,6 +120,11 @@ func SaveFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 				fmt.Println("error while saving")
 				return
 			}
+
+			if strings.Contains(*pathoffile, ".tweenklist") {
+
+			}
+
 			/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
 			PassKeyString := passKeyEntry.Text
 			if len(PassKeyString) > 32 {
@@ -250,10 +256,26 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 	openfileDialog.Show()
 }
 
+/* List things */
+/*
+type List_1 struct {
+	Title string
+	Check bool
+}
+
+func NewTodo(entry *widget.Entry, check *widget.Check) List_1 {
+	Title := entry.Text
+	Check := check.Checked
+	return List_1{Title, Check}
+}
+*/
+/*----------------------------------*/
+
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.3")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.4")
+	w2 := a.NewWindow("TODO LIST Tweenk: Encrypted Note App version 0.1.4")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isTextHidden := false
 	kswpdz := false //klucz szyfrowania w pamieci do zapisu (its in polish cuz why not)
@@ -276,10 +298,37 @@ func main() {
 		os.WriteFile("config.ini", []byte(""), 0644)
 	}
 
+	//Notes widgets
 	entry1 := widget.NewMultiLineEntry()
 	entry1.Wrapping = fyne.TextWrapWord
 	entry1.SetPlaceHolder(" ")
 	entry1.Move(fyne.NewPos(0, 0))
+	//-----------------------------------//
+
+	//TODO widgets
+	listcontainer := container.NewVBox()
+
+	entry2 := widget.NewMultiLineEntry()
+	entry2.Wrapping = fyne.TextWrapWord
+	entry2.SetPlaceHolder(" ")
+	entry2.Move(fyne.NewPos(0, 0))
+	entry2.Resize(fyne.NewSize(300, 150))
+
+	button1 := widget.NewButton("Add to list", func() {
+
+		itemlist := widget.NewLabel(entry2.Text)
+
+		check1 := widget.NewCheck("", func(value bool) {
+			log.Println("Check set to", value)
+		})
+
+		listcontainer.Add(itemlist)
+		listcontainer.Add(check1)
+		listcontainer.Refresh()
+
+	})
+	button1.Move(fyne.NewPos(700, 100))
+	//-----------------------------------//
 
 	//-----------------------------------//
 
@@ -314,9 +363,15 @@ func main() {
 	//New file
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.3")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.4")
 		entry1.Text = ""
 		entry1.Refresh()
+		kswpdz = false
+	})
+	newfile2 := fyne.NewMenuItem("New List", func() {
+		pathoffile = ""
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.4")
+		w2.Show() //Note for later. Do not use showandrun() when initializing new window
 		kswpdz = false
 	})
 	//Save file
@@ -341,7 +396,7 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.3 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.4 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
@@ -377,28 +432,34 @@ func main() {
 	//-----------------------------------//
 
 	//Menu items//
-	menuitem1 := fyne.NewMenu("File", newfile1, savefile1, openfile1, openfile2)
+	menuitem1 := fyne.NewMenu("File", newfile1, newfile2, savefile1, openfile1, openfile2)
+	menuitem1_2 := fyne.NewMenu("File", newfile2)
 	menuitem2 := fyne.NewMenu("View", view1, view2)
 	menuitem3 := fyne.NewMenu("Settings", sett1)
 	menuitem4 := fyne.NewMenu("Info", info1)
 
 	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3, menuitem4)
+	mainmenu2 := fyne.NewMainMenu(menuitem1_2, menuitem2, menuitem4)
 	w.SetMainMenu(mainmenu1)
+	w2.SetMainMenu(mainmenu2)
 
 	//-----------------------------------//
 
 	//Size and run//
-	scroll1 := container.NewScroll(entry1)
-	w.SetContent(scroll1)
+	stack1 := container.NewStack(entry1)
+	vbox1 := container.NewVBox(entry2, listcontainer, button1)
+	w.SetContent(stack1)
 	w.Resize(fyne.NewSize(float32(windowWidth), float32(windowHeight)))
+	w2.SetContent(vbox1)
+	w2.Resize(fyne.NewSize(float32(windowWidth), float32(windowHeight)))
 
 	w.ShowAndRun()
 	//-----------------------------------//
 
-	/*What changed in 0.1.3?*/
+	/*What changed in 0.1.4?*/
 
-	// Entry field now fits the entire screen and can be resized
-	// Text does not go outside the entry field so its more readable now
+	// Added TODO lists
+	// Changed scroll layout to stack layout
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
