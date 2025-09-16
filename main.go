@@ -433,13 +433,15 @@ func main() {
 
 	//Menu items//
 	menuitem1 := fyne.NewMenu("File", newfile1, newfile2, savefile1, openfile1, openfile2)
+	menuitem1_2 := fyne.NewMenu("File", newfile2)
 	menuitem2 := fyne.NewMenu("View", view1, view2)
 	menuitem3 := fyne.NewMenu("Settings", sett1)
 	menuitem4 := fyne.NewMenu("Info", info1)
 
 	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3, menuitem4)
+	mainmenu2 := fyne.NewMainMenu(menuitem1_2, menuitem2, menuitem4)
 	w.SetMainMenu(mainmenu1)
-	w2.SetMainMenu(mainmenu1)
+	w2.SetMainMenu(mainmenu2)
 
 	//-----------------------------------//
 
