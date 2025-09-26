@@ -6,6 +6,7 @@ It uses a custom .tweenk extension and AES-256 CBC encryption.
 ## Current features:
 * Dark/Light mode switch (it saves its settings in an .ini file)
 * Text hiding privacy view switch
+* TODO List creator
 * Strong AES-256 CBC encryption
 * Portability (no need for installation, use it anywhere)
 * Ease of use
