@@ -27,7 +27,7 @@ Clicking on "File" reveals these options:
 * Open plain text (opens .txt file)
 * Exit (exits the program)
 
-![Screenshot_2](https://i.ibb.co/Xk3zcZcb/11111.jpg)
+![Screenshot_2](https://i.imgur.com/eHaOlsX.jpeg)
 
 Clicking on "View" reveals these options:
 * Change theme (changes TWEENK theme from dark to light and vice versa)
