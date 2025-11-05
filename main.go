@@ -256,29 +256,16 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 	openfileDialog.Show()
 }
 
-/* List things */
-/*
-type List_1 struct {
-	Title string
-	Check bool
-}
-
-func NewTodo(entry *widget.Entry, check *widget.Check) List_1 {
-	Title := entry.Text
-	Check := check.Checked
-	return List_1{Title, Check}
-}
-*/
-/*----------------------------------*/
-
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.4")
-	w2 := a.NewWindow("TODO LIST Tweenk: Encrypted Note App version 0.1.4")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.5")
+
+	//w2 := a.NewWindow("TODO LIST Tweenk: Encrypted Note App version 0.1.5")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isTextHidden := false
 	kswpdz := false //klucz szyfrowania w pamieci do zapisu (its in polish cuz why not)
+	listOn := false
 	windowWidth := 1285
 	windowHeight := 750
 
@@ -310,7 +297,7 @@ func main() {
 
 	entry2 := widget.NewMultiLineEntry()
 	entry2.Wrapping = fyne.TextWrapWord
-	entry2.SetPlaceHolder(" ")
+	entry2.SetPlaceHolder("")
 	entry2.Move(fyne.NewPos(0, 0))
 	entry2.Resize(fyne.NewSize(300, 150))
 
@@ -360,19 +347,36 @@ func main() {
 	//-----------------------------------//
 
 	/*Menu subitems*/
-	//New file
+	//Stack, vbox and updating window's content
+	stack1 := container.NewStack(entry1)
+	vbox1 := container.NewVBox(entry2, listcontainer, button1)
+
+	updateWindow := func() {
+		if listOn {
+			w.SetContent(vbox1)
+		} else {
+			w.SetContent(stack1)
+		}
+	}
+
+	updateWindow()
+	//New File
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.4")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.5")
 		entry1.Text = ""
 		entry1.Refresh()
 		kswpdz = false
+		listOn = false
+		updateWindow()
 	})
-	newfile2 := fyne.NewMenuItem("New List", func() {
+	newfile2 := fyne.NewMenuItem("Switch to list", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.4")
-		w2.Show() //Note for later. Do not use showandrun() when initializing new window
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.5")
+		//w2.Show() //Note for later. Do not use showandrun() when initializing new window
 		kswpdz = false
+		listOn = true
+		updateWindow()
 	})
 	//Save file
 	savefile1 := fyne.NewMenuItem("Save", func() {
@@ -396,7 +400,7 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.4 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.5 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
@@ -433,33 +437,26 @@ func main() {
 
 	//Menu items//
 	menuitem1 := fyne.NewMenu("File", newfile1, newfile2, savefile1, openfile1, openfile2)
-	menuitem1_2 := fyne.NewMenu("File", newfile2)
 	menuitem2 := fyne.NewMenu("View", view1, view2)
 	menuitem3 := fyne.NewMenu("Settings", sett1)
 	menuitem4 := fyne.NewMenu("Info", info1)
 
 	mainmenu1 := fyne.NewMainMenu(menuitem1, menuitem2, menuitem3, menuitem4)
-	mainmenu2 := fyne.NewMainMenu(menuitem1_2, menuitem2, menuitem4)
 	w.SetMainMenu(mainmenu1)
-	w2.SetMainMenu(mainmenu2)
 
 	//-----------------------------------//
 
-	//Size and run//
-	stack1 := container.NewStack(entry1)
-	vbox1 := container.NewVBox(entry2, listcontainer, button1)
-	w.SetContent(stack1)
+	//Window run and resize//
 	w.Resize(fyne.NewSize(float32(windowWidth), float32(windowHeight)))
-	w2.SetContent(vbox1)
-	w2.Resize(fyne.NewSize(float32(windowWidth), float32(windowHeight)))
-
 	w.ShowAndRun()
+
 	//-----------------------------------//
 
-	/*What changed in 0.1.4?*/
+	/*What changed in 0.1.5?*/
 
-	// Added TODO lists
-	// Changed scroll layout to stack layout
+	// Changed the way lists work, now they are not the separate window but instead you can switch between notes mode and list mode
+	// Removed bunch of unused commented code that just cluttered this whole thing, so its easier to read and analyze now
+	// TO ADD NEXT: config.ini reads from multiple lines and stuff like saving passkeys are added to it; lists are saved into a .tweenklist file
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
