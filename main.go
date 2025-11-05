@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -269,20 +269,28 @@ func main() {
 	windowWidth := 1285
 	windowHeight := 750
 
-	themeData, err := os.ReadFile("config.ini") //reads the ini file and saves your theme settings
-
+	create_ini, err := os.OpenFile("config.ini", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Println("Error reading file", err)
+		panic(err)
 	}
+	defer create_ini.Close()
+
+	scan_text := bufio.NewScanner(create_ini)
 	var isDarkModeOn bool
-	if strings.Contains(string(themeData), "dark") {
-		isDarkModeOn = true
-		a.Settings().SetTheme(theme.DarkTheme())
-	} else if strings.Contains(string(themeData), "light") {
-		isDarkModeOn = false
-		a.Settings().SetTheme(theme.LightTheme())
-	} else {
-		os.WriteFile("config.ini", []byte(""), 0644)
+
+	for scan_text.Scan() {
+		scan_line := scan_text.Text()
+		if strings.Contains(scan_line, "dark") {
+			isDarkModeOn = true
+			a.Settings().SetTheme(theme.DarkTheme())
+		} else if strings.Contains(scan_line, "light") {
+			isDarkModeOn = false
+			a.Settings().SetTheme(theme.LightTheme())
+		} else if strings.Contains(scan_line, "saved_pass") {
+			fmt.Println("I HATE CUM AND I FUCK YOUR MUM")
+		} else {
+			create_ini.WriteString("")
+		}
 	}
 
 	//Notes widgets
@@ -306,7 +314,7 @@ func main() {
 		itemlist := widget.NewLabel(entry2.Text)
 
 		check1 := widget.NewCheck("", func(value bool) {
-			log.Println("Check set to", value)
+
 		})
 
 		listcontainer.Add(itemlist)
@@ -315,12 +323,6 @@ func main() {
 
 	})
 	button1.Move(fyne.NewPos(700, 100))
-	//-----------------------------------//
-
-	//-----------------------------------//
-
-	//Change text size
-
 	//-----------------------------------//
 
 	//Encryption key//
@@ -370,13 +372,20 @@ func main() {
 		listOn = false
 		updateWindow()
 	})
-	newfile2 := fyne.NewMenuItem("Switch to list", func() {
+	newfile2 := fyne.NewMenuItem("Switch to list/notes", func() {
 		pathoffile = ""
 		w.SetTitle("Tweenk: Encrypted Note App version 0.1.5")
 		//w2.Show() //Note for later. Do not use showandrun() when initializing new window
 		kswpdz = false
-		listOn = true
-		updateWindow()
+
+		if listOn {
+			listOn = false
+			updateWindow()
+		} else {
+			listOn = true
+			updateWindow()
+		}
+
 	})
 	//Save file
 	savefile1 := fyne.NewMenuItem("Save", func() {
@@ -407,19 +416,25 @@ func main() {
 		if !isDarkModeOn {
 			a.Settings().SetTheme(theme.DarkTheme())
 			isDarkModeOn = true
-			os.WriteFile("config.ini", []byte("dark"), 0644)
+			create_ini.Truncate(1)
+			create_ini.Seek(0, 0)
+			create_ini.WriteString("dark")
 		} else {
 			a.Settings().SetTheme(theme.LightTheme())
 			isDarkModeOn = false
-			os.WriteFile("config.ini", []byte("light"), 0644)
+			create_ini.Truncate(0)
+			create_ini.Seek(0, 0)
+			create_ini.WriteString("light")
 		}
 	})
 	view2 := fyne.NewMenuItem("Hide text", func() {
 		if !isTextHidden {
 			entry1.Password = true
+			entry2.Password = true
 			isTextHidden = true
 		} else {
 			entry1.Password = false
+			entry2.Password = false
 			isTextHidden = false
 		}
 	})
@@ -456,6 +471,7 @@ func main() {
 
 	// Changed the way lists work, now they are not the separate window but instead you can switch between notes mode and list mode
 	// Removed bunch of unused commented code that just cluttered this whole thing, so its easier to read and analyze now
+	// Changed how config.ini is handled so it uses bufio now
 	// TO ADD NEXT: config.ini reads from multiple lines and stuff like saving passkeys are added to it; lists are saved into a .tweenklist file
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
