@@ -6,6 +6,7 @@ It uses a custom .tweenk extension and AES-256 CBC encryption.
 ## Current features:
 * Dark/Light mode switch (it saves its settings in an .ini file)
 * Text hiding privacy view switch
+* TODO List creator
 * Strong AES-256 CBC encryption
 * Portability (no need for installation, use it anywhere)
 * Ease of use
@@ -18,7 +19,7 @@ It uses a custom .tweenk extension and AES-256 CBC encryption.
 2. Web and ~~android~~ support [Android version is being worked on here: https://github.com/maciej-piatek/TWEENK-Android]
 3. More encryption methods
 4. More customization options
-5. TODO List
+5. ~~TODO List~~ [completed in 0.1.4 version] (they need to be worked on still but they technically are in the program)
 6. Access to recently saved files from a list
 
 ## Screencast
@@ -37,7 +38,7 @@ Star the repository if you find it useful or think its cool!
 For support, use [GitHub Issues](https://github.com/maciej-piatek/TWEENK/issues) or contact me via email mpdev@memeware.net.
 
 
-### Current version as of 22.08.2025 is 0.1.3
+### Current version as of 16.09.2025 is 0.1.4
 
 # How to install from source:
 go install fyne.io/fyne/v2/cmd/fyne@latest
