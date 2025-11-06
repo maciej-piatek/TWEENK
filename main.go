@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -25,11 +26,9 @@ import (
 
 var PassKeyString string
 
-// GetAESDecrypted decrypts in AES 256 CBC
-func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
+// GetAESDecryptedOld decrypts in AES 256 CBC in old, more unsafe way that was used before 0.1.6 version
+func GetAESDecryptedOld(encrypted string, PassKeyString string) ([]byte, error) {
 	ivString := PassKeyString[:len(PassKeyString)-16]
-	enckey := PassKeyString
-	iv := ivString
 
 	ciphertext, err := base64.StdEncoding.DecodeString(encrypted)
 
@@ -37,7 +36,7 @@ func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
 		return nil, err
 	}
 
-	block, err := aes.NewCipher([]byte(enckey))
+	block, err := aes.NewCipher([]byte(PassKeyString))
 
 	if err != nil {
 		return nil, err
@@ -47,9 +46,38 @@ func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
 		return nil, fmt.Errorf("error 01: block size cant be zero") // block size cannot be zero
 	}
 
-	mode := cipher.NewCBCDecrypter(block, []byte(iv))
+	mode := cipher.NewCBCDecrypter(block, []byte(ivString))
 	mode.CryptBlocks(ciphertext, ciphertext)
 	ciphertext = PKCS5UnPadding(ciphertext)
+
+	return ciphertext, nil
+}
+
+// GetAESDecrypted decrypts in AES 256 CBC in correct way
+func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
+	ciphertext, err := base64.StdEncoding.DecodeString(encrypted)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ivString := ciphertext[:aes.BlockSize]
+
+	ciphertext = ciphertext[aes.BlockSize:]
+
+	block, err := aes.NewCipher([]byte(PassKeyString))
+
+	if err != nil {
+		return nil, err
+	}
+
+	mode := cipher.NewCBCDecrypter(block, ivString)
+	mode.CryptBlocks(ciphertext, ciphertext)
+	ciphertext = PKCS5UnPadding(ciphertext)
+
+	/*if len(ciphertext)%aes.BlockSize != 0 {
+		return nil, fmt.Errorf("error 01: block size cant be zero") // block size cannot be zero
+	}*/
 
 	return ciphertext, nil
 }
@@ -62,12 +90,8 @@ func PKCS5UnPadding(src []byte) []byte {
 	return src[:(length - unpadding)]
 }
 
-// GetAESEncrypted encrypts text in AES 256 CBC
+// GetAESEncrypted encrypts text in AES 256 CBC (since 0.1.6 its now safer by not using predictable lv)
 func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
-	ivString := PassKeyString[:len(PassKeyString)-16]
-	enckey := PassKeyString
-	iv := ivString
-
 	var plainTextBlock []byte
 	length := len(plaintext)
 
@@ -80,17 +104,23 @@ func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
 	}
 
 	copy(plainTextBlock, plaintext)
-	block, err := aes.NewCipher([]byte(enckey))
+	block, err := aes.NewCipher([]byte(PassKeyString))
 
 	if err != nil {
 		return "", err
 	}
 
+	ivString := make([]byte, aes.BlockSize)
+	_, err = rand.Read(ivString)
+	if err != nil {
+		return "", err
+	}
+
 	ciphertext := make([]byte, len(plainTextBlock))
-	mode := cipher.NewCBCEncrypter(block, []byte(iv))
+	mode := cipher.NewCBCEncrypter(block, []byte(ivString))
 	mode.CryptBlocks(ciphertext, plainTextBlock)
 
-	str := base64.StdEncoding.EncodeToString(ciphertext)
+	str := base64.StdEncoding.EncodeToString(append(ivString, ciphertext...)) //apparently "..." tells go to treat it as not one byte but entire slice
 
 	return str, nil
 }
@@ -253,81 +283,79 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 }
 
 func SaveList(w fyne.Window, listcontainer *fyne.Container, passKeyEntry *widget.Entry, pathoffile *string) {
-	if 1 == 1 {
-		dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", []*widget.FormItem{
-			widget.NewFormItem("Encryption Key", passKeyEntry),
-		}, func(confirm bool) {
-			if !confirm {
-				fmt.Println("error while saving")
+	dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", []*widget.FormItem{
+		widget.NewFormItem("Encryption Key", passKeyEntry),
+	}, func(confirm bool) {
+		if !confirm {
+			fmt.Println("error while saving")
+			return
+		}
+
+		/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
+		PassKeyString := passKeyEntry.Text
+		if len(PassKeyString) > 32 {
+			subtract := len(PassKeyString) - 32
+			PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
+		} else if len(PassKeyString) < 32 {
+			substract := 32 - len(PassKeyString)
+			addtable := make([]int, substract)
+			add := ""
+			for _, num := range addtable {
+				add += strconv.Itoa(num)
+			}
+			PassKeyString = PassKeyString + add
+		}
+
+		if *pathoffile != "" {
+			f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			if err != nil {
+				fmt.Println("error opening file:", err)
 				return
 			}
+			defer f.Close()
 
-			/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
-			PassKeyString := passKeyEntry.Text
-			if len(PassKeyString) > 32 {
-				subtract := len(PassKeyString) - 32
-				PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
-			} else if len(PassKeyString) < 32 {
-				substract := 32 - len(PassKeyString)
-				addtable := make([]int, substract)
-				add := ""
-				for _, num := range addtable {
-					add += strconv.Itoa(num)
-				}
-				PassKeyString = PassKeyString + add
+			var builder strings.Builder
+
+			for i := 0; i < len(listcontainer.Objects); i += 2 {
+				label := listcontainer.Objects[i].(*widget.Label)
+				check := listcontainer.Objects[i+1].(*widget.Check)
+				builder.WriteString(label.Text + "|" + strconv.FormatBool(check.Checked) + "\n")
 			}
 
-			if *pathoffile != "" {
-				f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-				if err != nil {
-					fmt.Println("error opening file:", err)
-					return
-				}
-				defer f.Close()
-
-				var builder strings.Builder
-
-				for i := 0; i < len(listcontainer.Objects); i += 2 {
-					label := listcontainer.Objects[i].(*widget.Label)
-					check := listcontainer.Objects[i+1].(*widget.Check)
-					builder.WriteString(label.Text + "|" + strconv.FormatBool(check.Checked) + "\n")
-				}
-
-				encryptedData, err := GetAESEncrypted(builder.String(), PassKeyString)
-				if err != nil {
-					fmt.Println("error", err)
-					return
-				}
-				f.Write([]byte(encryptedData))
-			} else {
-				saveFileDialog := dialog.NewFileSave(
-					func(r fyne.URIWriteCloser, _ error) {
-						if r == nil {
-							return
-						}
-						defer r.Close()
-
-						var builder strings.Builder
-
-						for i := 0; i < len(listcontainer.Objects); i += 2 {
-							label := listcontainer.Objects[i].(*widget.Label)
-							check := listcontainer.Objects[i+1].(*widget.Check)
-							builder.WriteString(label.Text + "|" + strconv.FormatBool(check.Checked) + "\n")
-						}
-						encryptedData, err := GetAESEncrypted(builder.String(), PassKeyString)
-						if err != nil {
-							fmt.Println("error", err)
-							return
-						}
-						r.Write([]byte(encryptedData))
-						*pathoffile = r.URI().Path()
-						w.SetTitle(*pathoffile)
-					}, w)
-				saveFileDialog.SetFileName("New encrypted file" + ".tweenklist")
-				saveFileDialog.Show()
+			encryptedData, err := GetAESEncrypted(builder.String(), PassKeyString)
+			if err != nil {
+				fmt.Println("error", err)
+				return
 			}
-		}, w)
-	}
+			f.Write([]byte(encryptedData))
+		} else {
+			saveFileDialog := dialog.NewFileSave(
+				func(r fyne.URIWriteCloser, _ error) {
+					if r == nil {
+						return
+					}
+					defer r.Close()
+
+					var builder strings.Builder
+
+					for i := 0; i < len(listcontainer.Objects); i += 2 {
+						label := listcontainer.Objects[i].(*widget.Label)
+						check := listcontainer.Objects[i+1].(*widget.Check)
+						builder.WriteString(label.Text + "|" + strconv.FormatBool(check.Checked) + "\n")
+					}
+					encryptedData, err := GetAESEncrypted(builder.String(), PassKeyString)
+					if err != nil {
+						fmt.Println("error", err)
+						return
+					}
+					r.Write([]byte(encryptedData))
+					*pathoffile = r.URI().Path()
+					w.SetTitle(*pathoffile)
+				}, w)
+			saveFileDialog.SetFileName("New encrypted file" + ".tweenklist")
+			saveFileDialog.Show()
+		}
+	}, w)
 
 }
 
@@ -402,7 +430,7 @@ func OpenList(w fyne.Window, listcontainer *fyne.Container, passKeyEntry *widget
 func main() {
 	//Initializers//
 	a := app.New()
-	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.5")
+	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.6")
 
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isTextHidden := false
@@ -508,7 +536,7 @@ func main() {
 	//New File
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.5")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.6")
 		entry1.Text = ""
 		entry1.Refresh()
 		kswpdz = false
@@ -517,7 +545,7 @@ func main() {
 	})
 	newfile2 := fyne.NewMenuItem("Switch to list/notes", func() {
 		pathoffile = ""
-		w.SetTitle("Tweenk: Encrypted Note App version 0.1.5")
+		w.SetTitle("Tweenk: Encrypted Note App version 0.1.6")
 		kswpdz = false
 
 		if listOn {
@@ -564,7 +592,7 @@ func main() {
 
 	//Information
 	info1 := fyne.NewMenuItem("About Tweenk", func() {
-		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.5 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
+		dialog.ShowInformation("Program information", "Tweenk: Encrypted Note App version 0.1.6 by Maciej Piątek (mpdev@memeware.net)| 2025 |", w)
 	})
 	//View options
 	view1 := fyne.NewMenuItem("Change theme", func() {
@@ -622,12 +650,10 @@ func main() {
 
 	//-----------------------------------//
 
-	/*What changed in 0.1.5?*/
+	/*What changed in 0.1.6?*/
 
-	// Changed the way lists work, now they are not the separate window but instead you can switch between notes mode and list mode
-	// Removed bunch of unused commented code that just cluttered this whole thing, so its easier to read and analyze now
-	// Changed how config.ini is handled so it uses bufio now
-	// Lists are saved into a .tweenklist file
+	// Changed the way lv is used. Before it was the same as password but without last 16 characters but right now its done the way it should be, which is way safer than before.
+	// Cleaned up the code a bit.
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
