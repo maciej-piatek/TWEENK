@@ -121,10 +121,6 @@ func SaveFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 				return
 			}
 
-			if strings.Contains(*pathoffile, ".tweenklist") {
-
-			}
-
 			/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
 			PassKeyString := passKeyEntry.Text
 			if len(PassKeyString) > 32 {
@@ -256,12 +252,158 @@ func OpenPlainFile(w fyne.Window, entry *widget.Entry, pathoffile *string) {
 	openfileDialog.Show()
 }
 
+func SaveList(w fyne.Window, listcontainer *fyne.Container, passKeyEntry *widget.Entry, pathoffile *string) {
+	if 1 == 1 {
+		dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", []*widget.FormItem{
+			widget.NewFormItem("Encryption Key", passKeyEntry),
+		}, func(confirm bool) {
+			if !confirm {
+				fmt.Println("error while saving")
+				return
+			}
+
+			/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
+			PassKeyString := passKeyEntry.Text
+			if len(PassKeyString) > 32 {
+				subtract := len(PassKeyString) - 32
+				PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
+			} else if len(PassKeyString) < 32 {
+				substract := 32 - len(PassKeyString)
+				addtable := make([]int, substract)
+				add := ""
+				for _, num := range addtable {
+					add += strconv.Itoa(num)
+				}
+				PassKeyString = PassKeyString + add
+			}
+
+			if *pathoffile != "" {
+				f, err := os.OpenFile(*pathoffile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+				if err != nil {
+					fmt.Println("error opening file:", err)
+					return
+				}
+				defer f.Close()
+
+				var builder strings.Builder
+
+				for i := 0; i < len(listcontainer.Objects); i += 2 {
+					label := listcontainer.Objects[i].(*widget.Label)
+					check := listcontainer.Objects[i+1].(*widget.Check)
+					builder.WriteString(label.Text + "|" + strconv.FormatBool(check.Checked) + "\n")
+				}
+
+				encryptedData, err := GetAESEncrypted(builder.String(), PassKeyString)
+				if err != nil {
+					fmt.Println("error", err)
+					return
+				}
+				f.Write([]byte(encryptedData))
+			} else {
+				saveFileDialog := dialog.NewFileSave(
+					func(r fyne.URIWriteCloser, _ error) {
+						if r == nil {
+							return
+						}
+						defer r.Close()
+
+						var builder strings.Builder
+
+						for i := 0; i < len(listcontainer.Objects); i += 2 {
+							label := listcontainer.Objects[i].(*widget.Label)
+							check := listcontainer.Objects[i+1].(*widget.Check)
+							builder.WriteString(label.Text + "|" + strconv.FormatBool(check.Checked) + "\n")
+						}
+						encryptedData, err := GetAESEncrypted(builder.String(), PassKeyString)
+						if err != nil {
+							fmt.Println("error", err)
+							return
+						}
+						r.Write([]byte(encryptedData))
+						*pathoffile = r.URI().Path()
+						w.SetTitle(*pathoffile)
+					}, w)
+				saveFileDialog.SetFileName("New encrypted file" + ".tweenklist")
+				saveFileDialog.Show()
+			}
+		}, w)
+	}
+
+}
+
+func OpenList(w fyne.Window, listcontainer *fyne.Container, passKeyEntry *widget.Entry, pathoffile *string) {
+	openfileDialog := dialog.NewFileOpen(
+		func(r fyne.URIReadCloser, _ error) {
+			if r == nil {
+				fmt.Println("error")
+				return
+			}
+			dialog.ShowForm("Type the encryption key (password)", "OK", "Cancel", []*widget.FormItem{
+				widget.NewFormItem("Encryption Key", passKeyEntry),
+			}, func(confirm bool) {
+				if !confirm {
+					fmt.Println("error while opening")
+					return
+				}
+				/* This checks if your encryption key is 32 bit long, if it isn't it will either cut out unnecesary data or add zeroes to fill the gap */
+				PassKeyString := passKeyEntry.Text
+				if len(PassKeyString) > 32 {
+					subtract := len(PassKeyString) - 32
+					PassKeyString = PassKeyString[:len(PassKeyString)-subtract]
+				} else if len(PassKeyString) < 32 {
+					substract := 32 - len(PassKeyString)
+					addtable := make([]int, substract)
+					add := ""
+					for _, num := range addtable {
+						add += strconv.Itoa(num)
+					}
+					PassKeyString = PassKeyString + add
+				}
+
+				data, err := io.ReadAll(r)
+				if err != nil {
+					fmt.Println("error")
+					return
+				}
+
+				decryptedFile, err := GetAESDecrypted(string(data), PassKeyString)
+				if err != nil {
+					fmt.Println("error", err)
+					return
+				}
+
+				listcontainer.Objects = nil
+
+				lines := strings.Split(string(decryptedFile), "\n")
+				for _, line := range lines {
+					if line == "" {
+						continue
+					}
+					parts := strings.Split(line, "|")
+					label := widget.NewLabel(parts[0])
+					check := widget.NewCheck("", func(bool) {})
+					if len(parts) > 1 && parts[1] == "true" {
+						check.SetChecked(true)
+					}
+					listcontainer.Add(label)
+					listcontainer.Add(check)
+				}
+				listcontainer.Refresh()
+
+				*pathoffile = r.URI().Path()
+				w.SetTitle(*pathoffile)
+			}, w)
+		}, w)
+	openfileDialog.SetFilter(
+		storage.NewExtensionFileFilter([]string{".tweenklist"}))
+	openfileDialog.Show()
+}
+
 func main() {
 	//Initializers//
 	a := app.New()
 	w := a.NewWindow("Tweenk: Encrypted Note App version 0.1.5")
 
-	//w2 := a.NewWindow("TODO LIST Tweenk: Encrypted Note App version 0.1.5")
 	pathoffile := "" // it was a global variable before but it was useless since this works too
 	isTextHidden := false
 	kswpdz := false //klucz szyfrowania w pamieci do zapisu (its in polish cuz why not)
@@ -362,6 +504,7 @@ func main() {
 	}
 
 	updateWindow()
+
 	//New File
 	newfile1 := fyne.NewMenuItem("New", func() {
 		pathoffile = ""
@@ -375,7 +518,6 @@ func main() {
 	newfile2 := fyne.NewMenuItem("Switch to list/notes", func() {
 		pathoffile = ""
 		w.SetTitle("Tweenk: Encrypted Note App version 0.1.5")
-		//w2.Show() //Note for later. Do not use showandrun() when initializing new window
 		kswpdz = false
 
 		if listOn {
@@ -395,6 +537,14 @@ func main() {
 		}
 		SaveFile(w, entry1, passKeyEntry, &pathoffile)
 	})
+
+	savefile2 := fyne.NewMenuItem("Save List", func() {
+		if !kswpdz {
+			passKeyEntry.Text = ""
+			passKeyEntry.Refresh()
+		}
+		SaveList(w, listcontainer, passKeyEntry, &pathoffile)
+	})
 	//Open file
 	openfile1 := fyne.NewMenuItem("Open encrypted text", func() {
 		passKeyEntry.Text = ""
@@ -405,6 +555,11 @@ func main() {
 		passKeyEntry.Text = ""
 		passKeyEntry.Refresh()
 		OpenPlainFile(w, entry1, &pathoffile)
+	})
+	openfile3 := fyne.NewMenuItem("Open list", func() {
+		passKeyEntry.Text = ""
+		passKeyEntry.Refresh()
+		OpenList(w, listcontainer, passKeyEntry, &pathoffile)
 	})
 
 	//Information
@@ -451,7 +606,7 @@ func main() {
 	//-----------------------------------//
 
 	//Menu items//
-	menuitem1 := fyne.NewMenu("File", newfile1, newfile2, savefile1, openfile1, openfile2)
+	menuitem1 := fyne.NewMenu("File", newfile1, newfile2, savefile1, savefile2, openfile1, openfile2, openfile3)
 	menuitem2 := fyne.NewMenu("View", view1, view2)
 	menuitem3 := fyne.NewMenu("Settings", sett1)
 	menuitem4 := fyne.NewMenu("Info", info1)
@@ -472,7 +627,7 @@ func main() {
 	// Changed the way lists work, now they are not the separate window but instead you can switch between notes mode and list mode
 	// Removed bunch of unused commented code that just cluttered this whole thing, so its easier to read and analyze now
 	// Changed how config.ini is handled so it uses bufio now
-	// TO ADD NEXT: config.ini reads from multiple lines and stuff like saving passkeys are added to it; lists are saved into a .tweenklist file
+	// Lists are saved into a .tweenklist file
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
