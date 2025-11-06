@@ -21,13 +21,15 @@ Window is also resizable and since 0.1.3, text box is too.
 
 Clicking on "File" reveals these options:
 * New (erases text box)
-* New List (opens TODO list creator)
+* Switch to list/notes (switches between TODO lists and notes)
 * Save (saves your note to a .tweenk or .txt file depending on your choice to either save an encrypted file or not)
+* Save list (saves your list in a .tweenklist file)
 * Open encrypted text (opens a .tweenk file)
 * Open plain text (opens .txt file)
+* Open list (opens a .tweenklist file)
 * Exit (exits the program)
 
-![Screenshot_2](https://i.imgur.com/eHaOlsX.jpeg)
+![Screenshot_2](https://i.imgur.com/vOx0qg1.jpeg)
 
 Clicking on "View" reveals these options:
 * Change theme (changes TWEENK theme from dark to light and vice versa)
