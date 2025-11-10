@@ -56,9 +56,12 @@ func GetAESDecryptedOld(encrypted string, PassKeyString string) ([]byte, error) 
 // GetAESDecrypted decrypts in AES 256 CBC in correct way
 func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(encrypted)
-
 	if err != nil {
 		return nil, err
+	}
+
+	if len(ciphertext) < aes.BlockSize {
+		return nil, fmt.Errorf("ciphertext too short, probably old format")
 	}
 
 	ivString := ciphertext[:aes.BlockSize]
@@ -75,17 +78,21 @@ func GetAESDecrypted(encrypted string, PassKeyString string) ([]byte, error) {
 	mode.CryptBlocks(ciphertext, ciphertext)
 	ciphertext = PKCS5UnPadding(ciphertext)
 
-	/*if len(ciphertext)%aes.BlockSize != 0 {
-		return nil, fmt.Errorf("error 01: block size cant be zero") // block size cannot be zero
-	}*/
-
 	return ciphertext, nil
 }
 
 // PKCS5UnPadding pads a certain blob of data with necessary data to be used in AES block cipher
 func PKCS5UnPadding(src []byte) []byte {
+	if len(src) == 0 {
+		return src
+	}
 	length := len(src)
 	unpadding := int(src[length-1])
+
+	// If padding is invalid, return original instead of crashing.
+	if unpadding <= 0 || unpadding > aes.BlockSize || unpadding > length {
+		return src
+	}
 
 	return src[:(length - unpadding)]
 }
@@ -242,13 +249,24 @@ func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 					return
 				}
 
-				decryptedFile, err := GetAESDecrypted(string(data), PassKeyString)
-				if err != nil {
-					fmt.Println("error", err)
-					return
-				}
+				dialog.ShowConfirm("Do you want to open legacy file?", "Do you want to open file saved in TWEENK 0.1.5 or older?", func(answer bool) {
+					if answer {
+						decryptedFileOld, err := GetAESDecryptedOld(string(data), PassKeyString)
+						if err != nil {
+							fmt.Println("error", err)
+							return
+						}
+						entry.SetText(string(decryptedFileOld))
+					} else {
+						decryptedFile, err := GetAESDecrypted(string(data), PassKeyString)
+						if err != nil {
+							fmt.Println("error", err)
+							return
+						}
+						entry.SetText(string(decryptedFile))
+					}
+				}, w)
 
-				entry.SetText(string(decryptedFile))
 				*pathoffile = r.URI().Path()
 				w.SetTitle(*pathoffile)
 			}, w)
@@ -396,8 +414,12 @@ func OpenList(w fyne.Window, listcontainer *fyne.Container, passKeyEntry *widget
 
 				decryptedFile, err := GetAESDecrypted(string(data), PassKeyString)
 				if err != nil {
-					fmt.Println("error", err)
-					return
+					decryptedFile, err = GetAESDecryptedOld(string(data), PassKeyString)
+					if err != nil {
+						fmt.Println("error", err)
+						return
+					}
+
 				}
 
 				listcontainer.Objects = nil
@@ -654,6 +676,7 @@ func main() {
 
 	// Changed the way lv is used. Before it was the same as password but without last 16 characters but right now its done the way it should be, which is way safer than before.
 	// Cleaned up the code a bit.
+	// Added option to open legacy .tweenk files from older versions.
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
