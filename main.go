@@ -97,7 +97,7 @@ func PKCS5UnPadding(src []byte) []byte {
 	return src[:(length - unpadding)]
 }
 
-// GetAESEncrypted encrypts text in AES 256 CBC (since 0.1.6 its now safer by not using predictable lv)
+// GetAESEncrypted encrypts text in AES 256 CBC (since 0.1.6 its now safer by not using predictable iv)
 func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
 	var plainTextBlock []byte
 	length := len(plaintext)
@@ -674,7 +674,7 @@ func main() {
 
 	/*What changed in 0.1.6?*/
 
-	// Changed the way lv is used. Before it was the same as password but without last 16 characters but right now its done the way it should be, which is way safer than before.
+	// Changed the way iv is used. Before it was the same as password but without last 16 characters but right now its done the way it should be, which is way safer than before.
 	// Cleaned up the code a bit.
 	// Added option to open legacy .tweenk files from older versions.
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
