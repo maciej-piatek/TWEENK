@@ -97,7 +97,7 @@ func PKCS5UnPadding(src []byte) []byte {
 	return src[:(length - unpadding)]
 }
 
-// GetAESEncrypted encrypts text in AES 256 CBC (since 0.1.6 its now safer by not using predictable lv)
+// GetAESEncrypted encrypts text in AES 256 CBC (since 0.1.6 its now safer by not using predictable iv)
 func GetAESEncrypted(plaintext string, PassKeyString string) (string, error) {
 	var plainTextBlock []byte
 	length := len(plaintext)
@@ -249,18 +249,24 @@ func OpenFile(w fyne.Window, entry *widget.Entry, passKeyEntry *widget.Entry, pa
 					return
 				}
 
-				decryptedFile, err := GetAESDecrypted(string(data), PassKeyString)
-				decoded, _ := base64.StdEncoding.DecodeString(string(data))
-				if len(decoded) < aes.BlockSize {
-					decryptedFile, err = GetAESDecryptedOld(string(data), PassKeyString)
-				} else {
-					decryptedFile, err = GetAESDecrypted(string(data), PassKeyString)
-					if err != nil {
-						decryptedFile, err = GetAESDecryptedOld(string(data), PassKeyString)
+				dialog.ShowConfirm("Do you want to open legacy file?", "Do you want to open file saved in TWEENK 0.1.5 or older?", func(answer bool) {
+					if answer {
+						decryptedFileOld, err := GetAESDecryptedOld(string(data), PassKeyString)
+						if err != nil {
+							fmt.Println("error", err)
+							return
+						}
+						entry.SetText(string(decryptedFileOld))
+					} else {
+						decryptedFile, err := GetAESDecrypted(string(data), PassKeyString)
+						if err != nil {
+							fmt.Println("error", err)
+							return
+						}
+						entry.SetText(string(decryptedFile))
 					}
-				}
+				}, w)
 
-				entry.SetText(string(decryptedFile))
 				*pathoffile = r.URI().Path()
 				w.SetTitle(*pathoffile)
 			}, w)
@@ -668,9 +674,9 @@ func main() {
 
 	/*What changed in 0.1.6?*/
 
-	// Changed the way lv is used. Before it was the same as password but without last 16 characters but right now its done the way it should be, which is way safer than before.
+	// Changed the way iv is used. Before it was the same as password but without last 16 characters but right now its done the way it should be, which is way safer than before.
 	// Cleaned up the code a bit.
-	// TO FIX IMIDIATELY: Legacy .tweenk file do not fucking work and need to be fixed
+	// Added option to open legacy .tweenk files from older versions.
 	// In the future I plan to make it so the text in that menu changes after you press it but right now it straight up crashes the program so I won't for a while
 
 }
